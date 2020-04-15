@@ -29,32 +29,39 @@ class LogStash::Filters::Apstate < LogStash::Filters::Base
     @memcached_server = MemcachedConfig::servers.first if @memcached_server.empty?
     @memcached = Dalli::Client.new(@memcached_server, {:expires_in => 0})
     @store_manager = StoreManager.new(@memcached)  
+    @last_refresh_stores = nil
+  end
 
+  def refresh_stores
+   return nil unless @last_refresh_stores.nil? || ((Time.now - @last_refresh_stores) > (60 * 5))
+   @last_refresh_stores = Time.now
+   e = LogStash::Event.new
+   e.set("refresh_stores",true)
+   return e
   end
 
   def filter(event)
  
-    enrichment = {}
-    enrichment.merge!(event)
+    enrichment = event.to_hash
 
     store_enrichment = @store_manager.enrich(enrichment)
    
     namespace = store_enrichment[NAMESPACE_UUID]
     datasource = (namespace) ? DATASOURCE + "_" + namespace : DATASOURCE
 
-    counterStore = @memcached.get(COUNTER_STORE)
-    counterStore = Hash.new if counterStore.nil?
-    counterStore[datasource] = counterStore[datasource].nil? ? 0 : (counterStore[datasource]+1)
-    @memcached.set(COUNTER_STORE,counterStore)
+    counter_store = @memcached.get(COUNTER_STORE) || {}
+    counter_store[datasource] = counter_store[datasource].nil? ? 0 : (counter_store[datasource] + 1)
+    @memcached.set(COUNTER_STORE,counter_store)
 
-    flowsNumber = @memcached.get(FLOWS_NUMBER)
-    flowsNumber = Hash.new if flowsNumber.nil?
-    store_enrichment["flows_count"] = flowsNumber[datasource] if flowsNumber[datasource]
+    flows_number = @memcached.get(FLOWS_NUMBER) || {}
+    store_enrichment["flows_count"] = flows_number[datasource] if flows_number[datasource]
 
-    enrichmentEvent = LogStash::Event.new
-    store_enrichment.each {|k,v| enrichmentEvent.set(k,v)}
-    yield enrichmentEvent
- 
+    enrichment_event = LogStash::Event.new
+    store_enrichment.each {|k,v| enrichment_event.set(k,v)}
+    yield enrichment_event
+
+    event_refresh = refresh_stores
+    yield event_refresh if event_refresh 
     event.cancel
    
   end  # def filter
