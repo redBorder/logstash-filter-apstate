@@ -27,7 +27,7 @@ class LogStash::Filters::Apstate < LogStash::Filters::Base
 
   def register
     @memcached_server = MemcachedConfig::servers.first if @memcached_server.empty?
-    @memcached = Dalli::Client.new(@memcached_server, {:expires_in => 0})
+    @memcached = Dalli::Client.new(@memcached_server, {:expires_in => 0, :value_max_bytes => 4000000})
     @store_manager = StoreManager.new(@memcached)  
     @last_refresh_stores = nil
   end
