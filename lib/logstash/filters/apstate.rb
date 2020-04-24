@@ -46,8 +46,9 @@ class LogStash::Filters::Apstate < LogStash::Filters::Base
 
     store_enrichment = @store_manager.enrich(enrichment)
    
+    datasource = DATASOURCE
     namespace = store_enrichment[NAMESPACE_UUID]
-    datasource = (namespace) ? DATASOURCE + "_" + namespace : DATASOURCE
+    datasource = (namespace) ? DATASOURCE + "_" + namespace : DATASOURCE if (namespace && !namespace.empty?)
 
     counter_store = @memcached.get(COUNTER_STORE) || {}
     counter_store[datasource] = counter_store[datasource].nil? ? 0 : (counter_store[datasource] + 1)
