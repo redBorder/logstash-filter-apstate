@@ -32,14 +32,6 @@ class LogStash::Filters::Apstate < LogStash::Filters::Base
     @last_refresh_stores = nil
   end
 
-  def refresh_stores
-   return nil unless @last_refresh_stores.nil? || ((Time.now - @last_refresh_stores) > (60 * 5))
-   @last_refresh_stores = Time.now
-   e = LogStash::Event.new
-   e.set("refresh_stores",true)
-   return e
-  end
-
   def filter(event)
  
     enrichment = event.to_hash
@@ -61,9 +53,7 @@ class LogStash::Filters::Apstate < LogStash::Filters::Base
     store_enrichment.each {|k,v| enrichment_event.set(k,v)}
     yield enrichment_event
 
-    event_refresh = refresh_stores
-    yield event_refresh if event_refresh 
-    event.cancel
+   event.cancel
    
   end  # def filter
 end    # classLogstash::Filter::Apstate
