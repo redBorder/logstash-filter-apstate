@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'logstash-filter-apstate'
-  s.version = '1.0.8'
+  s.version = '1.0.9'
   s.licenses = ['Apache License (2.0)']
   s.summary = "Controls the status of the sensors that are active on the platform"
   s.description = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
