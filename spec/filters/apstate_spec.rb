@@ -6,7 +6,7 @@ describe LogStash::Filters::Apstate do
   describe "Set to Hello World" do
     let(:config) do <<-CONFIG
       filter {
-        apstatet {
+        apstate {
           message => "Hello World"
         }
       }
